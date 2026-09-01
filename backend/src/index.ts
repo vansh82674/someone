@@ -80,8 +80,16 @@ io.on('connection', (socket) => {
         // emit a 'waiting' event just to the current socket 
         socket.emit("waiting_queue", { message: "Waiting for a partner" })
 
-
     })
+
+    // broadcast data into that room only
+    socket.on("send_message", (data) => {
+        // data should contain {text, senderId, room}
+        socket.to(data.room).emit("new_message", data)
+    })
+
+
+
     // Cleanup the socket
     socket.on('disconnect', () => {
         console.log("User Disconnected:", socket.id)
