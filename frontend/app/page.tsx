@@ -22,6 +22,9 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [roomName, setRoomName] = useState('')
 
+  // for auto scrolling the messages
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   // Store the socket connectioin in a red so our button can use it
   const socketRef = useRef<Socket | null>(null)
 
@@ -51,12 +54,21 @@ export default function Home() {
       setMessages((prev) => [...prev, msg])
     })
 
+    // stranger disconnect 
+    socketRef.current.on("stranger_disconnected", (data) => {
+      setMessages((prev) => [...prev, { text: "Stranger has disconnected.", senderId: "system" }]);
+    })
+
     // Cleanup connnection when the user leaves page
     return () => {
       socketRef.current?.disconnect()
     }
 
   }, [])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
 
   const handleJoinQueue = () => {
@@ -77,6 +89,12 @@ export default function Home() {
     setInputValue("")
   }
 
+  const leaveChat = () => {
+    socketRef.current?.emit('leave_room', { room: roomName })
+    setMessages([])
+    setUserStatus('idle')
+  }
+
   // 4. Conditional Rendering according to the user state
   if (userStatus === 'waiting') {
     return <div className="flex min-h-screen flex-col items-center justify-center bg-brand-cream text-brand-dark">
@@ -87,12 +105,22 @@ export default function Home() {
   if (userStatus === 'matched') {
     return <div className="flex min-h-screen flex-col items-center justify-center bg-brand-cream text-brand-dark">
       <h1 className="text-2xl font-bold text-green-500">You are in the chat room</h1>
-      <div className="items-center justify-center text-brand-dark">
+      <Button className="text-2xl bg-red-500 text-black" onClick={leaveChat}>Leave Chat</Button>
+      <div className="w-full max-w-lg overflow-y-auto border rounded-xl p-4 items-center justify-center text-brand-dark">
         {
           messages.map((msg, i) => (
-            <li key={i} className={msg.senderId === socketRef.current?.id ? 'text-green-500' : 'text-gray-500'} >{msg.text}</li>
+            <div key={i} className={`flex w-full mb-2 ${msg.senderId === 'system' ? 'justify-center' :
+                msg.senderId === socketRef.current?.id ? 'justify-end' : 'justify-start'
+              }`}>
+              <div className={`px-4 py-2 rounded-2xl ${msg.senderId === 'system' ? 'bg-transparent text-red-500 italic' :
+                  msg.senderId === socketRef.current?.id ? 'bg-brand-violet text-white' : 'bg-gray-200 text-black'
+                }`}>
+                {msg.text}
+              </div>
+            </div>
           ))
         }
+        <div ref={messagesEndRef} />
         <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
         <Button className="bg-brand-violet text-white font-sans" onClick={sendMessage}>Send Message</Button>
       </div>

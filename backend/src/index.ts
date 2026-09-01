@@ -62,6 +62,11 @@ io.on('connection', (socket) => {
                 // Create a new room
                 const roomName = `room_${Date.now()}_${socket.id}`
 
+                // save the roomname for disconnecting
+                socket.data.room = roomName;
+                partnerSocket.data.room = roomName;
+
+
                 // Make sure they both are connected to the room
                 socket.join(roomName)
                 partnerSocket.join(roomName)
@@ -88,11 +93,17 @@ io.on('connection', (socket) => {
         socket.to(data.room).emit("new_message", data)
     })
 
-
+    // when user wants to leave chat
+    socket.on("leave_room", (data) => {
+        // tell the other person they left
+        socket.to(data.room).emit("stranger_disconnected")
+        // remove the socket from the room so they don't receive future messages
+        socket.leave(data.room)
+    })
 
     // Cleanup the socket
     socket.on('disconnect', () => {
-        console.log("User Disconnected:", socket.id)
+        socket.to(socket.data.room).emit('stranger_disconnected', { id: socket.id })
     })
 })
 
