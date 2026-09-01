@@ -2,6 +2,12 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { PrismaClient } from '@prisma/client';
+import { Redis } from 'ioredis'
+import dotenv from 'dotenv'
+
+
+dotenv.config()
 
 const app = express();
 app.use(cors()) // Allow frontend to talk with backend without errors
@@ -14,6 +20,28 @@ const io = new Server(httpServer, {
     }
 })
 
+// Initialise Redis
+const redis = new Redis(process.env.REDIS_URL || "")
+redis.on("connect", () => {
+    console.log("Connected to Redis Successfully")
+})
+redis.on("error", (err) => {
+    console.error("Redus connection failed:", err.message)
+})
+
+// Initialise Prisma
+const prisma = new PrismaClient()
+async function testPrisma() {
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        console.log('Connected to Supabase (via Prisma) successfully')
+    }
+    catch (error) {
+        console.error("Prisma Connection failed", error)
+    }
+}
+testPrisma()
+
 // Listen for WebSockets
 io.on('connection', (socket) => {
     console.log("User connected:", socket.id)
@@ -23,7 +51,7 @@ io.on('connection', (socket) => {
     })
 })
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 
 app.get('/', (req, res) => {
     res.send("Someone backend is running");
