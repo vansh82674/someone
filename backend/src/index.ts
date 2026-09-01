@@ -50,22 +50,39 @@ io.on('connection', (socket) => {
     socket.on("join_queue", async (data) => {
         console.log("User wants to join the queue:", data)
 
-        try {
-            // test user to supabase
-            const newUser = await prisma.user.create({
-                data: {
-                    email: `${socket.id}@test.com` // Fake email just to test the user
-                }
-            })
-            console.log("Databse Write success: ", newUser)
+        // 1. Try to get someone from the queue
+        const partnerSocketId = await redis.rpop("waiting_queue")
 
-            //Reply to the frontend
-            socket.emit("queue_joined", { message: "You are officially in the queue" })
+        if (partnerSocketId) {
+            // 2. Someone was in the queue! Check if they are still connected  
+            const partnerSocket = io.sockets.sockets.get(partnerSocketId)
+
+            if (partnerSocket) {
+                // 3. Success They are connected 
+                // Create a new room
+                const roomName = `room_${Date.now()}_${socket.id}`
+
+                // Make sure they both are connected to the room
+                socket.join(roomName)
+                partnerSocket.join(roomName)
+
+                // emit 'matched'
+                return io.to(roomName).emit("matched", {
+                    room: roomName
+                })
+            }
         }
-        catch (err) {
-            console.error("Database write failed:", err)
-        }
+        // 4.  Fallback: If we reach here, it means the queue was empty, 
+        // or the person in the queue was a disconnected ghost 
+
+        // push the current socket id back to redis waiting queue
+        await redis.lpush('waiting_queue', socket.id)
+        // emit a 'waiting' event just to the current socket 
+        socket.emit("waiting_queue", { message: "Waiting for a partner" })
+
+
     })
+    // Cleanup the socket
     socket.on('disconnect', () => {
         console.log("User Disconnected:", socket.id)
     })
