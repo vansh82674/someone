@@ -46,6 +46,26 @@ testPrisma()
 io.on('connection', (socket) => {
     console.log("User connected:", socket.id)
 
+    // Listen for the frontend
+    socket.on("join_queue", async (data) => {
+        console.log("User wants to join the queue:", data)
+
+        try {
+            // test user to supabase
+            const newUser = await prisma.user.create({
+                data: {
+                    email: `${socket.id}@test.com` // Fake email just to test the user
+                }
+            })
+            console.log("Databse Write success: ", newUser)
+
+            //Reply to the frontend
+            socket.emit("queue_joined", { message: "You are officially in the queue" })
+        }
+        catch (err) {
+            console.error("Database write failed:", err)
+        }
+    })
     socket.on('disconnect', () => {
         console.log("User Disconnected:", socket.id)
     })
