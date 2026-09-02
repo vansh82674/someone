@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, DM_Sans } from "next/font/google";
 import "./globals.css";
+import { SocketProvider } from '@/components/ui/SocketProvider'
 
 const sora = Sora({
   subsets: ["latin"],
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en">
       {/* We apply both font variables, and set dmSans as the default sans font */}
       <body className={`${dmSans.variable} ${sora.variable} font-sans antialiased bg-brand-cream text-brand-dark`}>
-        {children}
+        <SocketProvider>
+          {children}
+        </SocketProvider>
       </body>
     </html>
   );
