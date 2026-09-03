@@ -1,14 +1,16 @@
 'use client'
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/ui/Navbar";
-
+import Hero from "@/components/ui/Hero";
+import TopicsGrid from "@/components/ui/TopicsGrid";
 
 export default function Home() {
-  // Default idle Status
   return (
-    <div>
+    <div className="min-h-screen bg-brand-cream">
       <Navbar />
+      <main>
+        <Hero />
+        <TopicsGrid />
+      </main>
     </div>
   );
 }
