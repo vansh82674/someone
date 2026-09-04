@@ -47,7 +47,7 @@ export default function ChatRoom() {
         }
 
 
-    }, [])
+    }, [socket, roomId])
 
     // send message function
     const sendMessage = () => {

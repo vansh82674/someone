@@ -22,19 +22,19 @@ export default function ProcessSteps() {
     ]
 
     return <section className="w-full bg-brand-cream">
-        <div className="max-w-2xl mx-auto py-20 px-6 flex flex-col items-center justify-center">
-            <p className="text-brand-violet uppercase tracking-widest font-bold text-sm mb-4">The Process</p>
-            <h2 className="text-xl md:text-4xl font-bold text-center mb-4">
+        <div className="max-w-2xl mx-auto py-15 px-6 flex flex-col items-center justify-center">
+            <p className="text-brand-violet uppercase font-bold text-sm mb-2 tracking-wide leading-none">The Process</p>
+            <h2 className="text-xl md:text-4xl text-center mb-4 font-black tracking-tighter leading-none">
                 One conversation can change a <span className="text-brand-violet">thought.</span>
             </h2>
             <h3 className="text-brand-dark/70 text-xs md:text-base">A frictionless 3-step journey from confusion to clarity.</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto px-6 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-6 pb-12">
             {
                 details.map((detail, index) => {
                     return (
                         <Card key={index} className="relative bg-white border-gray-200 hover:border-brand-violet/30 hover:shadow-xl transition-all duration-300">
-                            <CardHeader className="flex flex-col items-start text-left p-5 md:p-8">
+                            <CardHeader className="flex flex-col items-start text-left p-5 md:p-5">
 
                                 {/* The absolute positioned icon */}
                                 <div className={`absolute top-8 right-8 ${index === 2
