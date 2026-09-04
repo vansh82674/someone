@@ -61,15 +61,15 @@ export default function Hero() {
                     className="flex flex-wrap justify-center items-center gap-6 sm:gap-12 text-brand-dark/70 font-semibold text-xs sm:text-sm"
                 >
                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-6 h-6 text-brand-violet" />
+                        <ShieldCheck className="w-5 h-5 text-brand-violet" />
                         <span>100% Anonymous</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <UserCheck className="w-6 h-6 text-brand-violet" />
+                        <UserCheck className="w-5 h-5 text-green-500" />
                         <span>Verified Listeners</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Heart className="w-6 h-6 text-brand-violet" />
+                        <Heart className="w-5 h-5 text-gray-600" />
                         <span>Zero Baggage</span>
                     </div>
                 </motion.div>
