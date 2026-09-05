@@ -68,7 +68,7 @@ export default function VerifiedListeners() {
                                 <div className="flex items-center gap-1.5">
                                     <h3 className="font-bold text-base text-brand-dark tracking-tight">{listener.name}</h3>
                                     <span className="flex items-center gap-0.5 text-[9px] font-bold text-green-600 px-1 py-0.5 uppercase tracking-wide">
-                                        <BadgeCheck className="w-4 h-4" strokeWidth={2.5} /> Verified
+                                        <BadgeCheck className="w-4 h-4" strokeWidth={1.5} /> Verified
                                     </span>
                                 </div>
                                 <p className="text-xs text-brand-dark/50 font-medium mt-0.5 leading-tight">{listener.tagline}</p>

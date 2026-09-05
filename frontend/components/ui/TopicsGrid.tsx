@@ -94,7 +94,7 @@ export default function TopicsGrid() {
                                 {/* The Icon */}
                                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-2 transition-colors duration-300 ${isSelected ? 'bg-white/10 text-white' : 'bg-white text-brand-violet group-hover:bg-brand-violet group-hover:text-white'
                                     }`}>
-                                    <topic.icon className="w-5 h-5" strokeWidth={2} />
+                                    <topic.icon className="w-5 h-5" strokeWidth={1.5} />
                                 </div>
 
                                 {/* The Text (No explicit text colors here, they inherit from the parent!) */}
