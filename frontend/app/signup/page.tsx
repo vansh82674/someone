@@ -19,6 +19,12 @@ export default function SignupPage() {
     setIsLoading(true);
     setError("");
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost:8081/api/auth/signup", {
         method: "POST",

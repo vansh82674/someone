@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const isRegistered = searchParams?.get("registered") === "true";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +54,12 @@ export default function LoginPage() {
           <p className="text-sm text-brand-dark/60 font-medium">Enter your details to sign in to your account</p>
         </div>
 
+        {isRegistered && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 bg-green-50 text-green-700 text-sm font-semibold p-4 rounded-xl border border-green-200 text-center">
+            Account created successfully! Please sign in.
+          </motion.div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-brand-dark/80 px-1">Email</label>
@@ -68,9 +76,9 @@ export default function LoginPage() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">
               <label className="text-sm font-bold text-brand-dark/80">Password</label>
-              <Link href="#" className="text-xs font-bold text-brand-violet hover:text-brand-violet/80 transition-colors">
+              <button type="button" onClick={() => alert("Password reset flow coming soon!")} className="text-xs font-bold text-brand-violet hover:text-brand-violet/80 transition-colors">
                 Forgot password?
-              </Link>
+              </button>
             </div>
             <input
               type="password"
@@ -105,5 +113,13 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-cream flex items-center justify-center p-4 font-sans"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-violet"></div></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -8,13 +8,30 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum Role {
+  USER
+  LISTENER
+}
+
 model User {
-    id         Int          @id @default(autoincrement())
-    email      String       @unique
-    password   String
-    name       String
-    anonId     String       @unique
-    sessionLogs SessionLog[]
+    id            Int          @id @default(autoincrement())
+    email         String       @unique
+    password      String
+    name          String
+    anonId        String       @unique
+    role          Role         @default(USER)
+    
+    // Listener specific fields
+    isVerified    Boolean      @default(false)
+    tagline       String?
+    rating        Float        @default(0)
+    reviewsCount  Int          @default(0)
+    quote         String?
+    topics        String[]     @default([])
+    price         String?
+    bgColor       String?
+
+    sessionLogs   SessionLog[]
 }
 
 model SessionLog {

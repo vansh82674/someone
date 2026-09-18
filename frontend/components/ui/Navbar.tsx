@@ -43,11 +43,13 @@ export default function Navbar() {
 
                 {/* Middle Links */}
                 <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-brand-dark/70">
-                    <Link href="#" className="hover:text-brand-dark transition-colors">How It Works</Link>
-                    <Link href="#" className="hover:text-brand-dark transition-colors">Find Someone</Link>
-                    <Link href="#" className="hover:text-brand-dark transition-colors">Become a Someone</Link>
-                    <Link href="#" className="hover:text-brand-dark transition-colors">Safety</Link>
-                    <Link href="#" className="hover:text-brand-dark transition-colors">About</Link>
+                    <Link href="/#how-it-works" className="hover:text-brand-dark transition-colors">How It Works</Link>
+                    <Link href="/queue" className="hover:text-brand-dark transition-colors">Find Someone</Link>
+                    <Link href="/become-someone" className="text-[13px] font-bold text-brand-dark hover:text-brand-violet transition-colors">
+                        Become a Someone
+                    </Link>
+                    <Link href="/#safety" className="hover:text-brand-dark transition-colors">Safety</Link>
+                    <Link href="/#about" className="hover:text-brand-dark transition-colors">About</Link>
                 </div>
 
                 {/* Mobile Menu Trigger */}
@@ -83,11 +85,11 @@ export default function Navbar() {
                             </div>
 
                             <div className="flex flex-col gap-6 text-lg font-semibold text-brand-dark/80 mt-2 px-2">
-                                <Link href="#" className="hover:text-brand-dark">How It Works</Link>
-                                <Link href="/queue" className="hover:text-brand-dark">Find Someone</Link>
-                                <Link href="#" className="hover:text-brand-dark">Become a Someone</Link>
-                                <Link href="#" className="hover:text-brand-dark">Safety</Link>
-                                <Link href="#" className="hover:text-brand-dark">About</Link>
+                                <Link href="/#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-dark">How It Works</Link>
+                                <Link href="/queue" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-dark">Find Someone</Link>
+                                <Link href="/become-someone" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-dark">Become a Someone</Link>
+                                <Link href="/#safety" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-dark">Safety</Link>
+                                <Link href="/#about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-dark">About</Link>
                                 
                                 {status === 'authenticated' && (
                                     <Link href="/dashboard" className="flex items-center gap-3 text-brand-dark mt-4 cursor-pointer hover:opacity-80">
@@ -110,6 +112,13 @@ export default function Navbar() {
                                     </>
                                 ) : (
                                     <>
+                                        <Link 
+                                            href="/become-someone" 
+                                            className="block text-sm font-bold text-brand-dark/80 hover:text-brand-dark transition-colors py-2"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            Become a Someone
+                                        </Link>
                                         <Link href="/login" className="w-full">
                                             <Button variant="outline" className="w-full rounded-xl py-6 text-brand-dark font-bold border-gray-300 bg-transparent hover:bg-gray-50">
                                                 Log In

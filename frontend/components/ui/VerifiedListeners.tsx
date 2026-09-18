@@ -1,44 +1,55 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "./button";
 import { Card } from "./card";
-import { BadgeCheck, Star, ArrowRight } from "lucide-react";
+import { BadgeCheck, Star, ArrowRight, Loader2 } from "lucide-react";
 
+interface Listener {
+  id: number;
+  name: string;
+  tagline: string;
+  rating: number;
+  reviewsCount: number;
+  quote: string;
+  topics: string[];
+  price: string;
+  bgColor: string;
+}
 
 export default function VerifiedListeners() {
-    const listeners = [
-        {
-            initials: "YK",
-            name: "Dr. Yagbal Kapil",
-            tagline: "Mindful Listener & Perspective Guide",
-            rating: 4.9,
-            reviews: 128,
-            quote: "Calm listener who enjoys helping people see situations from a different perspective.",
-            topics: ["Relationships", "Life", "Personal Decisions"],
-            price: "₹199 / 60m",
-            bgColor: "bg-[#7C3AED]"
-        },
-        {
-            initials: "VM",
-            name: "Vikas Mishra",
-            tagline: "Startup Operator & Decision Sounding Board",
-            rating: 4.8,
-            reviews: 94,
-            quote: "Startup enthusiast who enjoys helping people think through difficult decisions.",
-            topics: ["Career", "Business", "Personal Decisions"],
-            price: "₹199 / 60m",
-            bgColor: "bg-[#1F2937]"
-        },
-        {
-            initials: "PD",
-            name: "Pranjal Dwivedi",
-            tagline: "Peer Mentor & Academic Guidance",
-            rating: 4.9,
-            reviews: 156,
-            quote: "Management student with internship and interview experience.",
-            topics: ["Studies", "Career", "Personal Decisions"],
-            price: "₹199 / 60m",
-            bgColor: "bg-[#059669]"
+    const [listeners, setListeners] = useState<Listener[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchListeners = async () => {
+        try {
+          const res = await fetch("http://localhost:8081/api/users/listeners");
+          if (res.ok) {
+            const data = await res.json();
+            setListeners(data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch listeners:", error);
+        } finally {
+          setIsLoading(false);
         }
-    ];
+      };
+
+      fetchListeners();
+    }, []);
+
+    if (isLoading) {
+      return (
+        <section className="bg-white py-24 px-6 flex justify-center items-center">
+            <Loader2 className="w-8 h-8 animate-spin text-brand-violet" />
+        </section>
+      );
+    }
+
+    if (listeners.length === 0) {
+      return null;
+    }
 
     return (
         <section className="bg-white py-24 px-6">
@@ -62,7 +73,7 @@ export default function VerifiedListeners() {
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-3">
                             <div className={`w-11 h-11 ${listener.bgColor} text-white font-bold text-sm flex items-center justify-center rounded-[14px] shrink-0`}>
-                                {listener.initials}
+                                {listener.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                             </div>
                             <div className="flex flex-col items-start text-left w-full">
                                 <div className="flex items-center gap-1.5">
@@ -81,7 +92,7 @@ export default function VerifiedListeners() {
                                 <Star key={i} className={`w-3 h-3 ${i === 4 && listener.rating < 5 ? 'fill-yellow-400 opacity-30 text-transparent' : 'fill-yellow-400 text-transparent'}`} />
                             ))}
                             <span className="text-xs font-bold text-brand-dark ml-1.5">{listener.rating}</span>
-                            <span className="text-xs text-brand-dark/40 font-medium ml-0.5">({listener.reviews})</span>
+                            <span className="text-xs text-brand-dark/40 font-medium ml-0.5">({listener.reviewsCount})</span>
                         </div>
 
                         {/* Quote Box */}

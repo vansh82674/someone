@@ -8,17 +8,39 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck, Calendar, Clock, Info, CheckCircle2, RefreshCcw } from "lucide-react";
 import Navbar from "@/components/ui/Navbar";
 
+import { useRouter } from "next/navigation";
+
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("upcoming");
   const [pastSessions, setPastSessions] = useState<any[]>([]);
   const [isLoadingPast, setIsLoadingPast] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
 
   useEffect(() => {
     if (activeTab === "past" && session?.user && pastSessions.length === 0) {
       fetchPastSessions();
     }
   }, [activeTab, session]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-[#FDFCFB] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-violet"></div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return null; // Will redirect via useEffect
+  }
 
   const fetchPastSessions = async () => {
     if (!session?.user) return;
@@ -37,9 +59,9 @@ export default function DashboardPage() {
   };
 
   const tabs = [
-    { id: "upcoming", label: "Upcoming Conversations (1)" },
+    { id: "upcoming", label: "Upcoming Conversations" },
     { id: "past", label: `Past Conversations (${pastSessions.length})` },
-    { id: "saved", label: "Saved Someones (1)" },
+    { id: "saved", label: "Saved Someones" },
     { id: "privacy", label: "Privacy & Identity" },
   ];
 
@@ -98,49 +120,12 @@ export default function DashboardPage() {
                 transition={{ duration: 0.3 }}
                 className="grid gap-6"
               >
-                {/* Session Card */}
-                <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                  <div className="flex gap-5 items-start">
-                    <Avatar className="w-16 h-16 shadow-md border-2 border-white">
-                      <AvatarFallback className="bg-linear-to-br from-brand-violet to-indigo-600 text-white text-xl font-bold">
-                        Y
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xl font-bold text-brand-dark">Dr. Yagbal Kapil</h3>
-                        <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Verified Listener
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 text-sm font-medium text-brand-dark/70 pt-1">
-                        <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg">
-                          <Calendar className="w-4 h-4 text-brand-violet" />
-                          Today at 06:00 PM
-                        </span>
-                        <span className="flex items-center gap-1.5 text-gray-500">
-                          <Clock className="w-4 h-4" />
-                          60 Mins (Voice)
-                        </span>
-                        <span className="flex items-center gap-1.5 text-gray-500">
-                          <Info className="w-4 h-4" />
-                          Career
-                        </span>
-                      </div>
-                    </div>
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                    <Calendar className="w-10 h-10 text-gray-300" />
                   </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto mt-4 md:mt-0">
-                    <Button variant="outline" className="rounded-xl px-6 py-5 font-bold text-gray-500 hover:text-red-600 hover:bg-red-50 border-gray-200">
-                      Cancel
-                    </Button>
-                    <Button className="rounded-xl px-8 py-5 font-bold bg-brand-violet hover:bg-brand-violet/90 text-white shadow-lg shadow-brand-violet/20">
-                      Enter Conversation
-                    </Button>
-                  </div>
+                  <h3 className="text-xl font-bold text-brand-dark mb-2">No Upcoming Conversations</h3>
+                  <p className="text-gray-500 font-medium max-w-xs">You don't have any scheduled sessions yet.</p>
                 </div>
               </motion.div>
             )}
