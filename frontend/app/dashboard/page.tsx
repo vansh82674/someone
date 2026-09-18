@@ -102,7 +102,7 @@ export default function DashboardPage() {
                 <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                   <div className="flex gap-5 items-start">
                     <Avatar className="w-16 h-16 shadow-md border-2 border-white">
-                      <AvatarFallback className="bg-gradient-to-br from-brand-violet to-indigo-600 text-white text-xl font-bold">
+                      <AvatarFallback className="bg-linear-to-br from-brand-violet to-indigo-600 text-white text-xl font-bold">
                         Y
                       </AvatarFallback>
                     </Avatar>

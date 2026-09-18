@@ -287,7 +287,7 @@ export default function ChatRoom() {
                                     </p>
                                     
                                     <textarea 
-                                        className="w-full border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-brand-violet/50 focus:ring-2 focus:ring-brand-violet/20 mb-6 bg-gray-50 text-sm font-medium"
+                                        className="w-full border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-brand-violet/20 mb-6 bg-gray-50 text-sm font-medium"
                                         placeholder="Please provide brief details..."
                                         rows={4}
                                         value={reportReason}
