@@ -9,6 +9,29 @@ generator client {
 }
 
 model User {
-    id Int @id @default(autoincrement())
-    email String @unique
+    id         Int          @id @default(autoincrement())
+    email      String       @unique
+    password   String
+    name       String
+    anonId     String       @unique
+    sessionLogs SessionLog[]
+}
+
+model SessionLog {
+    id              String    @id @default(uuid())
+    userId          Int
+    user            User      @relation(fields: [userId], references: [id])
+    partnerAnonId   String?
+    durationSeconds Int       @default(0)
+    topic           String?
+    endedBy         String    // 'USER', 'PARTNER', 'SYSTEM'
+    createdAt       DateTime  @default(now())
+}
+
+model ModerationEvent {
+    id          String   @id @default(uuid())
+    sessionId   String
+    reporterId  Int
+    reason      String
+    timestamp   DateTime @default(now())
 }
