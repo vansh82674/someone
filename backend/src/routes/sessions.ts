@@ -1,4 +1,5 @@
 import { Router } from 'express';
+// @ts-check - Triggering TS language server refresh
 import { prisma } from '../config/prisma.js';
 
 const router = Router();

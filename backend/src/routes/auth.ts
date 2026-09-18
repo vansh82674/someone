@@ -1,4 +1,5 @@
 import { Router } from 'express';
+// @ts-check - Triggering TS language server refresh
 import bcrypt from 'bcryptjs';
 import { prisma } from '../config/prisma.js';
 
