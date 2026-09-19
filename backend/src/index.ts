@@ -1,15 +1,14 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import dotenv from 'dotenv'
 import { handleSockets } from './sockets/socketHandler.js';
 import authRouter from './routes/auth.js';
 import sessionsRouter from './routes/sessions.js';
 import reportRouter from './routes/report.js';
 import usersRouter from './routes/users.js';
-
-dotenv.config()
+import adminRouter from './routes/admin.js'
 
 const app = express();
 app.use(cors()) // Allow frontend to talk with backend without errors
@@ -19,6 +18,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/admin', adminRouter)
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {

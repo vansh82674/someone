@@ -20,6 +20,7 @@ model User {
     name          String
     anonId        String       @unique
     role          Role         @default(USER)
+    isAdmin       Boolean      @default(false)
     
     // Listener specific fields
     isVerified    Boolean      @default(false)
