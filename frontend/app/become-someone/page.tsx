@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 export default function BecomeSomeonePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +43,7 @@ export default function BecomeSomeonePage() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:8081/api/users/apply-listener", {
+      const res = await fetch(`http://localhost:8081/api/users/apply-listener`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -61,17 +61,55 @@ export default function BecomeSomeonePage() {
       }
 
       setSuccess(true);
+      // Tell Next-Auth to update the local cookie with their new status
+      await update({ role: 'LISTENER', isVerified: false });
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
   };
+  // Wait for the session to load
+  if (!session) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8" /></div>;
+
+  const role = (session.user as any).role;
+  const isVerified = (session.user as any).isVerified;
+
+  // If they are already a verified listener
+  if (role === 'LISTENER' && isVerified === true) {
+    return (
+      <div className="min-h-screen bg-brand-cream flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <CheckCircle2 className="w-20 h-20 text-green-500 mb-6" />
+          <h1 className="text-3xl font-black text-brand-dark mb-4">You are already a Verified Someone!</h1>
+          <Button onClick={() => router.push("/dashboard")} className="bg-brand-violet text-white">Go to Dashboard</Button>
+        </main>
+      </div>
+    )
+  }
+
+  // If they applied but are waiting for admin approval
+  if (role === 'LISTENER' && isVerified === false) {
+    return (
+      <div className="min-h-screen bg-brand-cream flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <Loader2 className="w-20 h-20 text-blue-500 mb-6 animate-spin" />
+          <h1 className="text-3xl font-black text-brand-dark mb-4">Application Under Review</h1>
+          <p className="text-gray-500 mb-8 max-w-md">Your application to become a listener is currently being reviewed by our team. Please check back later.</p>
+        </main>
+      </div>
+    )
+  }
+
+  // Otherwise, they are a normal USER (role === 'USER')
+  // Show the normal return statement (the Application form) below!
 
   return (
     <div className="min-h-screen bg-brand-cream overflow-x-hidden flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-12 md:py-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -108,7 +146,7 @@ export default function BecomeSomeonePage() {
               <form onSubmit={handleSubmit} className="space-y-6 text-left">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-brand-dark ml-1">Your Tagline</label>
-                  <input 
+                  <input
                     required
                     placeholder="e.g. Mindful Listener & Perspective Guide"
                     className="flex w-full bg-gray-50 border-none h-14 rounded-2xl px-5 text-brand-dark font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet"
@@ -119,7 +157,7 @@ export default function BecomeSomeonePage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-brand-dark ml-1">Your Quote / Bio</label>
-                  <textarea 
+                  <textarea
                     required
                     rows={3}
                     placeholder="e.g. Calm listener who enjoys helping people see situations from a different perspective."
@@ -131,7 +169,7 @@ export default function BecomeSomeonePage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-brand-dark ml-1">Topics of Expertise (comma separated)</label>
-                  <input 
+                  <input
                     required
                     placeholder="e.g. Relationships, Career, Personal Decisions"
                     className="flex w-full bg-gray-50 border-none h-14 rounded-2xl px-5 text-brand-dark font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet"
@@ -139,10 +177,10 @@ export default function BecomeSomeonePage() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, topics: e.target.value })}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-brand-dark ml-1">Hourly Rate</label>
-                  <input 
+                  <input
                     disabled
                     value={formData.price}
                     className="flex w-full bg-gray-100 border-none h-14 rounded-2xl px-5 text-gray-500 font-medium"
@@ -150,8 +188,8 @@ export default function BecomeSomeonePage() {
                   <p className="text-xs text-gray-400 ml-1 mt-1 font-medium">Standard rate for all new listeners.</p>
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isLoading}
                   className="w-full bg-brand-violet hover:bg-brand-violet/90 text-white rounded-2xl h-16 text-lg font-bold shadow-xl shadow-brand-violet/20 mt-4"
                 >

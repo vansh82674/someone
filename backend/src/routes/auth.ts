@@ -45,7 +45,9 @@ router.post('/signup', async (req, res) => {
             id: user.id,
             email: user.email,
             name: user.name,
-            anonId: user.anonId
+            anonId: user.anonId,
+            role: user.role,
+            isVerified: user.isVerified
         });
 
     } catch (error) {
@@ -77,7 +79,9 @@ router.post('/login', async (req, res) => {
             id: user.id,
             email: user.email,
             name: user.name,
-            anonId: user.anonId
+            anonId: user.anonId,
+            role: user.role,
+            isVerified: user.isVerified
         });
 
     } catch (error) {

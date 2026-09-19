@@ -41,17 +41,29 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    // 1. The `trigger === "update"` block allows us to refresh the session 
+    // without forcing the user to log out and log back in!
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.anonId = (user as any).anonId;
+        token.role = (user as any).role;
+        token.isVerified = (user as any).isVerified;
       }
+
+      if (trigger === "update" && session) {
+        token.role = session.role;
+        token.isVerified = session.isVerified;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id;
         (session.user as any).anonId = token.anonId;
+        (session.user as any).role = token.role;
+        (session.user as any).isVerified = token.isVerified;
       }
       return session;
     },
