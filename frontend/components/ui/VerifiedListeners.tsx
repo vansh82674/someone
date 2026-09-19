@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "./button";
 import { Card } from "./card";
 import { BadgeCheck, Star, ArrowRight, Loader2 } from "lucide-react";
+import axios from "axios";
 
 interface Listener {
   id: number;
@@ -24,11 +25,8 @@ export default function VerifiedListeners() {
     useEffect(() => {
       const fetchListeners = async () => {
         try {
-          const res = await fetch("http://localhost:8081/api/users/listeners");
-          if (res.ok) {
-            const data = await res.json();
-            setListeners(data);
-          }
+          const res = await axios.get("http://localhost:8081/api/users/listeners");
+          setListeners(res.data);
         } catch (error) {
           console.error("Failed to fetch listeners:", error);
         } finally {

@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import axios, { isAxiosError } from "axios";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,23 +16,20 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const res = await fetch("http://localhost:8081/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
+          const res = await axios.post("http://localhost:8081/api/auth/login", {
+            email: credentials.email,
+            password: credentials.password,
           });
 
-          const user = await res.json();
-
-          if (res.ok && user) {
-            return user;
+          if (res.data) {
+            return res.data;
           }
 
-          throw new Error(user.error || "Login failed");
+          throw new Error("Login failed");
         } catch (error: any) {
+          if (isAxiosError(error)) {
+            throw new Error(error.response?.data?.error || "Login failed");
+          }
           throw new Error(error.message || "An error occurred during login");
         }
       },

@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Flag, AlertTriangle, UserX } from "lucide-react";
 import { useSession } from "next-auth/react"
+import axios from "axios";
 
 type Message = {
     text: string,
@@ -101,14 +102,10 @@ export default function ChatRoom() {
         if (!reportReason) return;
         setIsReporting(true);
         try {
-            await fetch("http://localhost:8081/api/report", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    sessionId: roomId,
-                    reporterId: (session?.user as any)?.id || 0,
-                    reason: reportReason
-                }),
+            await axios.post("http://localhost:8081/api/report", {
+                sessionId: roomId,
+                reporterId: (session?.user as any)?.id || 0,
+                reason: reportReason
             });
             setHasReported(true);
             setTimeout(() => {

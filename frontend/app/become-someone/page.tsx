@@ -8,6 +8,7 @@ import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import axios, { isAxiosError } from "axios";
 
 export default function BecomeSomeonePage() {
   const { data: session, status, update } = useSession();
@@ -43,28 +44,23 @@ export default function BecomeSomeonePage() {
     setError("");
 
     try {
-      const res = await fetch(`http://localhost:8081/api/users/apply-listener`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: session?.user?.email,
-          tagline: formData.tagline,
-          quote: formData.quote,
-          topics: formData.topics.split(",").map(t => t.trim()).filter(t => t),
-          price: formData.price,
-          bgColor: "bg-brand-violet",
-        }),
+      await axios.post(`/api/users/apply-listener`, {
+        tagline: formData.tagline,
+        quote: formData.quote,
+        topics: formData.topics.split(",").map(t => t.trim()).filter(t => t),
+        price: formData.price,
+        bgColor: "bg-brand-violet",
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to submit application");
-      }
 
       setSuccess(true);
       // Tell Next-Auth to update the local cookie with their new status
       await update({ role: 'LISTENER', isVerified: false });
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
+      if (isAxiosError(err)) {
+        setError(err.response?.data?.message || err.response?.data?.error || "Failed to submit application");
+      } else {
+        setError(err.message || "An unexpected error occurred.");
+      }
     } finally {
       setIsLoading(false);
     }

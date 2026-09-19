@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Calendar, Clock, Info, CheckCircle2, RefreshCcw } from "lucide-react";
 import Navbar from "@/components/ui/Navbar";
+import axios from "axios";
 
 import { useRouter } from "next/navigation";
 
@@ -46,11 +47,8 @@ export default function DashboardPage() {
     if (!session?.user) return;
     setIsLoadingPast(true);
     try {
-      const res = await fetch(`http://localhost:8081/api/sessions/past/${(session.user as any).id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPastSessions(data);
-      }
+      const res = await axios.get(`http://localhost:8081/api/sessions/past/${(session.user as any).id}`);
+      setPastSessions(res.data);
     } catch (error) {
       console.error("Failed to fetch past sessions:", error);
     } finally {

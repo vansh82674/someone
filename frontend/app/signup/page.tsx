@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import axios, { isAxiosError } from "axios";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -26,22 +27,20 @@ export default function SignupPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8081/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+      await axios.post("http://localhost:8081/api/auth/signup", {
+        name,
+        email,
+        password,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
-      }
 
       // If signup is successful, redirect to login page
       router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.message);
+      if (isAxiosError(err)) {
+        setError(err.response?.data?.error || "Something went wrong");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsLoading(false);
     }
