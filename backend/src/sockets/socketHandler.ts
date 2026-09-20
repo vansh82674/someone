@@ -45,52 +45,75 @@ export const handleSockets = (io: Server) => {
         // Sprint 2: Topic-Based Matchmaking
         socket.on("join_queue", async (data) => {
             const isListener = socket.data.role === 'LISTENER' && socket.data.isVerified === true;
-            const topic = data.topic || "casual";
-            const queueKey = `waiting_queue_${topic}`;
+            const userTopic = data.topic || "casual";
 
-            // Determine which queue to look in, and which queue to join if empty
-            const partnerQueueKey = isListener ? `waiting_users_${topic}` : `waiting_listeners_${topic}`;
-            const myQueueKey = isListener ? `waiting_listeners_${topic}` : `waiting_users_${topic}`;
+            if (isListener) {
+                const topics = socket.data.topics && socket.data.topics.length > 0 ? socket.data.topics : ["casual"];
 
-            // 1. Try to get someone from the topic queue
-            const partnerSocketId = await redis.rpop(partnerQueueKey)
+                // 1. Loop through all topics to find a waiting USER
+                for (const topic of topics) {
+                    const partnerSocketId = await redis.rpop('waiting_users_' + topic);
 
-            if (partnerSocketId && partnerSocketId !== socket.id) {
-                // 2. Check if they are still connected  
-                const partnerSocket = io.sockets.sockets.get(partnerSocketId)
+                    if (partnerSocketId && partnerSocketId !== socket.id) {
+                        const partnerSocket = io.sockets.sockets.get(partnerSocketId);
 
-                if (partnerSocket) {
-                    // 3. Success They are connected 
-                    const roomName = `room_${Date.now()}_${socket.id}`
+                        if (partnerSocket && !partnerSocket.data.room) {
+                            const roomName = `room_${Date.now()}_${socket.id}`;
+                            socket.data.room = roomName;
+                            partnerSocket.data.room = roomName;
+                            socket.join(roomName);
+                            partnerSocket.join(roomName);
 
-                    // save the roomname for disconnecting
-                    socket.data.room = roomName;
-                    partnerSocket.data.room = roomName;
-
-                    // Make sure they both are connected to the room
-                    socket.join(roomName)
-                    partnerSocket.join(roomName)
-
-                    // emit 'matched'
-                    return io.to(roomName).emit("matched", {
-                        room: roomName,
-                        topic: topic
-                    })
+                            return io.to(roomName).emit("matched", { room: roomName, topic });
+                        }
+                    }
                 }
-            }
 
-            // 4. Fallback: If empty, push current socket to topic queue
-            await redis.lpush(myQueueKey, socket.id)
-            socket.emit("waiting_queue", { message: "Waiting for a partner", topic })
-        })
+                // 2. Fallback: No users found. Push listener into ALL their topic queues
+                for (const topic of topics) {
+                    await redis.lpush('waiting_listeners_' + topic, socket.id);
+                }
+                socket.emit("waiting_queue", { message: "Waiting for a user", topics });
+
+            } else {
+                // THIS IS A NORMAL USER
+
+                // 1. Check if there is a LISTENER waiting in this topic
+                const partnerSocketId = await redis.rpop('waiting_listeners_' + userTopic);
+
+                if (partnerSocketId && partnerSocketId !== socket.id) {
+                    const partnerSocket = io.sockets.sockets.get(partnerSocketId);
+
+                    if (partnerSocket && !partnerSocket.data.room) {
+                        const roomName = `room_${Date.now()}_${socket.id}`;
+                        socket.data.room = roomName;
+                        partnerSocket.data.room = roomName;
+                        socket.join(roomName);
+                        partnerSocket.join(roomName);
+
+                        return io.to(roomName).emit("matched", { room: roomName, topic: userTopic });
+                    }
+                }
+
+                // 2. Fallback: No listeners found. Push user into waiting_users queue
+                await redis.lpush('waiting_users_' + userTopic, socket.id);
+                socket.emit("waiting_queue", { message: "Waiting for a listener", topic: userTopic });
+            }
+        });
 
         // Cancel Queueing
         socket.on("leave_queue", async (data) => {
             const isListener = socket.data.role === 'LISTENER' && socket.data.isVerified === true;
-            const topic = data.topic || "casual";
-            const myQueueKey = isListener ? `waiting_listeners_${topic}` : `waiting_users_${topic}`;
-
-            await redis.lrem(myQueueKey, 0, socket.id);
+            
+            if (isListener) {
+                const topics = socket.data.topics && socket.data.topics.length > 0 ? socket.data.topics : ["casual"];
+                for (const topic of topics) {
+                    await redis.lrem(`waiting_listeners_${topic}`, 0, socket.id);
+                }
+            } else {
+                const topic = data.topic || "casual";
+                await redis.lrem(`waiting_users_${topic}`, 0, socket.id);
+            }
         });
 
         // broadcast data into that room only
