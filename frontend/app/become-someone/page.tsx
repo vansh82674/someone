@@ -7,8 +7,17 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import axios, { isAxiosError } from "axios";
+
+const AVAILABLE_TOPICS = [
+  "Casual Chat",
+  "Just Venting",
+  "Career Advice",
+  "School & Studies",
+  "Relationships"
+];
 
 export default function BecomeSomeonePage() {
   const { data: session, status, update } = useSession();
@@ -21,7 +30,7 @@ export default function BecomeSomeonePage() {
   const [formData, setFormData] = useState({
     tagline: "",
     quote: "",
-    topics: "",
+    topics: [] as string[],
     price: "₹199 / 60m",
   });
 
@@ -40,14 +49,19 @@ export default function BecomeSomeonePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.topics.length === 0) {
+      setError("Please select at least one topic of expertise.");
+      return;
+    }
     setIsLoading(true);
     setError("");
 
     try {
       await axios.post(`/api/users/apply-listener`, {
+        email: session?.user?.email,
         tagline: formData.tagline,
         quote: formData.quote,
-        topics: formData.topics.split(",").map(t => t.trim()).filter(t => t),
+        topics: formData.topics,
         price: formData.price,
         bgColor: "bg-brand-violet",
       });
@@ -76,10 +90,11 @@ export default function BecomeSomeonePage() {
     return (
       <div className="min-h-screen bg-brand-cream flex flex-col">
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <main className="flex-1 flex flex-col gap-4 items-center justify-center p-6 text-center">
           <CheckCircle2 className="w-20 h-20 text-green-500 mb-6" />
           <h1 className="text-3xl font-black text-brand-dark mb-4">You are already a Verified Someone!</h1>
-          <Button onClick={() => router.push("/dashboard")} className="bg-brand-violet text-white">Go to Dashboard</Button>
+          <Button onClick={() => router.push("/dashboard")} className="bg-brand-violet text-white py-6 px-4 text-lg">Go to Dashboard</Button>
+          <Button onClick={() => router.push('/queue')} className="bg-brand-violet text-white py-6 px-4 text-lg ">Join Queue</Button>
         </main>
       </div>
     )
@@ -164,14 +179,25 @@ export default function BecomeSomeonePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-brand-dark ml-1">Topics of Expertise (comma separated)</label>
-                  <input
-                    required
-                    placeholder="e.g. Relationships, Career, Personal Decisions"
-                    className="flex w-full bg-gray-50 border-none h-14 rounded-2xl px-5 text-brand-dark font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet"
-                    value={formData.topics}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, topics: e.target.value })}
-                  />
+                  <label className="text-sm font-bold text-brand-dark ml-1">Topics of Expertise (select all that apply)</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                    {AVAILABLE_TOPICS.map((topic) => (
+                      <label key={topic} className="flex items-center space-x-3 bg-gray-50 p-4 rounded-2xl cursor-pointer hover:bg-brand-violet/5 transition-colors border border-transparent hover:border-brand-violet/20">
+                        <Checkbox
+                          checked={formData.topics.includes(topic)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData({ ...formData, topics: [...formData.topics, topic] });
+                            } else {
+                              setFormData({ ...formData, topics: formData.topics.filter(t => t !== topic) });
+                            }
+                          }}
+                          className="w-5 h-5 rounded-md border-brand-violet/30 data-[state=checked]:bg-brand-violet data-[state=checked]:text-white"
+                        />
+                        <span className="text-sm font-medium text-brand-dark">{topic}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">

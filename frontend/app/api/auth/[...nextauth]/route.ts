@@ -47,11 +47,13 @@ export const authOptions: NextAuthOptions = {
         token.anonId = (user as any).anonId;
         token.role = (user as any).role;
         token.isVerified = (user as any).isVerified;
+        token.isAdmin = (user as any).isAdmin;
       }
 
       if (trigger === "update" && session) {
         token.role = session.role;
         token.isVerified = session.isVerified;
+        token.isAdmin = session.isAdmin;
       }
 
       return token;
@@ -62,6 +64,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).anonId = token.anonId;
         (session.user as any).role = token.role;
         (session.user as any).isVerified = token.isVerified;
+        (session.user as any).isAdmin = token.isAdmin;
       }
       return session;
     },

@@ -11,7 +11,10 @@ import usersRouter from './routes/users.js';
 import adminRouter from './routes/admin.js'
 
 const app = express();
-app.use(cors()) // Allow frontend to talk with backend without errors
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true
+})) // Allow frontend to talk with backend without errors
 app.use(express.json()); // Parse JSON bodies
 
 app.use('/api/auth', authRouter);

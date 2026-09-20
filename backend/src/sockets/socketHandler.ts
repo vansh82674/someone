@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io'
 import { redis } from '../config/redis.js'
+import { prisma } from '../config/prisma.js'
 
 // Simple keyword filter for Sprint 3
 const BANNED_WORDS = ['hate', 'kill', 'suicide', 'slur1', 'slur2']; // Mock list
@@ -9,18 +10,50 @@ const isClean = (text: string) => {
 };
 
 export const handleSockets = (io: Server) => {
+    // auth middleware
+    io.use(async (socket, next) => {
+        // get user id
+        const userId = socket.handshake.auth.userId;
+        if (!userId) {
+            return next(new Error('Authentication error: No userId provided'))
+        }
+
+        try {
+            // find the user in DB
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: parseInt(userId)
+                }
+            })
+
+            if (!user) return next(new Error("User not found"))
+
+            socket.data.userId = user.id;
+            socket.data.role = user.role;
+            socket.data.isVerified = user.isVerified;
+            socket.data.topics = user.topics;
+
+            next();
+        }
+        catch (error) {
+            next(new Error("Internal Server Error"))
+        }
+    })
     io.on('connection', (socket: Socket) => {
         console.log("Connected:", socket.id)
 
         // Sprint 2: Topic-Based Matchmaking
         socket.on("join_queue", async (data) => {
+            const isListener = socket.data.role === 'LISTENER' && socket.data.isVerified === true;
             const topic = data.topic || "casual";
             const queueKey = `waiting_queue_${topic}`;
-            
-            console.log(`User ${socket.id} wants to join the queue for topic: ${topic}`)
+
+            // Determine which queue to look in, and which queue to join if empty
+            const partnerQueueKey = isListener ? `waiting_users_${topic}` : `waiting_listeners_${topic}`;
+            const myQueueKey = isListener ? `waiting_listeners_${topic}` : `waiting_users_${topic}`;
 
             // 1. Try to get someone from the topic queue
-            const partnerSocketId = await redis.rpop(queueKey)
+            const partnerSocketId = await redis.rpop(partnerQueueKey)
 
             if (partnerSocketId && partnerSocketId !== socket.id) {
                 // 2. Check if they are still connected  
@@ -45,17 +78,19 @@ export const handleSockets = (io: Server) => {
                     })
                 }
             }
-            
+
             // 4. Fallback: If empty, push current socket to topic queue
-            await redis.lpush(queueKey, socket.id)
+            await redis.lpush(myQueueKey, socket.id)
             socket.emit("waiting_queue", { message: "Waiting for a partner", topic })
         })
 
         // Cancel Queueing
         socket.on("leave_queue", async (data) => {
+            const isListener = socket.data.role === 'LISTENER' && socket.data.isVerified === true;
             const topic = data.topic || "casual";
-            const queueKey = `waiting_queue_${topic}`;
-            await redis.lrem(queueKey, 0, socket.id);
+            const myQueueKey = isListener ? `waiting_listeners_${topic}` : `waiting_users_${topic}`;
+
+            await redis.lrem(myQueueKey, 0, socket.id);
         });
 
         // broadcast data into that room only

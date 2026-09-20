@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useSession } from 'next-auth/react';
 
 // 1. Define Shape of our context state
 interface SocketContextType {
@@ -16,6 +17,8 @@ const SocketContext = createContext<SocketContextType | null>(null)
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
+    const { data: session } = useSession();
+
     // 4. Type the Socket State
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
@@ -24,6 +27,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         const socketInstance = io('http://localhost:8081', {
             autoConnect: true,
             transports: ['websocket'], // Forces WebSocket transport for performance
+            auth: {
+                userId: session?.user.id
+            }
         });
 
         setSocket(socketInstance);
