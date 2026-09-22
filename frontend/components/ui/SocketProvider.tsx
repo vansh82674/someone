@@ -24,11 +24,14 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
+        // Don't attempt to connect if the session hasn't loaded or user isn't logged in
+        if (!session?.user?.id) return;
+
         const socketInstance = io('http://localhost:8081', {
             autoConnect: true,
             transports: ['websocket'], // Forces WebSocket transport for performance
             auth: {
-                userId: session?.user.id
+                userId: session.user.id
             }
         });
 
@@ -46,7 +49,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             socketInstance.disconnect();
         };
-    }, []);
+    }, [session]);
 
     return (
         <SocketContext.Provider value={{ socket, isConnected }}>
