@@ -9,6 +9,39 @@ const isClean = (text: string) => {
     return !BANNED_WORDS.some(word => lowerText.includes(word));
 };
 
+const endSession = async (roomName: string) => {
+    const sessionStr = await redis.get(`session:${roomName}`);
+    if (sessionStr) {
+        await redis.del(`session:${roomName}`);
+        const session = JSON.parse(sessionStr);
+        const durationMins = (Date.now() - session.startTime) / 60000;
+        const deduction = Math.ceil((session.listenerRate / 60) * durationMins);
+        
+        if (deduction > 0) {
+            try {
+                await prisma.$transaction([
+                    prisma.user.update({
+                        where: { id: session.userId },
+                        data: { walletBalance: { decrement: deduction } }
+                    }),
+                    prisma.user.update({
+                        where: { id: session.listenerId },
+                        data: { walletBalance: { increment: Math.floor(deduction * 0.8) } }
+                    }),
+                    prisma.transaction.create({
+                        data: { userId: session.userId, amount: -deduction, type: 'CHAT_DEDUCTION', status: 'SUCCESS' }
+                    }),
+                    prisma.transaction.create({
+                        data: { userId: session.listenerId, amount: Math.floor(deduction * 0.8), type: 'CHAT_EARNING', status: 'SUCCESS' }
+                    })
+                ]);
+            } catch (error) {
+                console.error("Payment deduction failed:", error);
+            }
+        }
+    }
+};
+
 export const handleSockets = (io: Server) => {
     // auth middleware
     io.use(async (socket, next) => {
@@ -32,6 +65,8 @@ export const handleSockets = (io: Server) => {
             socket.data.role = user.role;
             socket.data.isVerified = user.isVerified;
             socket.data.topics = user.topics;
+            socket.data.hourlyRate = user.hourlyRate;
+            socket.data.walletBalance = user.walletBalance;
 
             next();
         }
@@ -51,22 +86,42 @@ export const handleSockets = (io: Server) => {
                 const topics = socket.data.topics && socket.data.topics.length > 0 ? socket.data.topics : ["casual"];
 
                 // 1. Loop through all topics to find a waiting USER
+                let matched = false;
                 for (const topic of topics) {
-                    const partnerSocketId = await redis.rpop('waiting_users_' + topic);
+                    const queueLen = await redis.llen('waiting_users_' + topic);
+                    for (let i = 0; i < queueLen; i++) {
+                        const partnerSocketId = await redis.rpop('waiting_users_' + topic);
+                        if (!partnerSocketId) break;
 
-                    if (partnerSocketId && partnerSocketId !== socket.id) {
-                        const partnerSocket = io.sockets.sockets.get(partnerSocketId);
+                        if (partnerSocketId !== socket.id) {
+                            const partnerSocket = io.sockets.sockets.get(partnerSocketId);
 
-                        if (partnerSocket && !partnerSocket.data.room) {
-                            const roomName = `room_${Date.now()}_${socket.id}`;
-                            socket.data.room = roomName;
-                            partnerSocket.data.room = roomName;
-                            socket.join(roomName);
-                            partnerSocket.join(roomName);
+                            if (partnerSocket && !partnerSocket.data.room) {
+                                // Check if user has enough balance for this listener
+                                if ((partnerSocket.data.walletBalance || 0) >= (socket.data.hourlyRate || 199)) {
+                                    const roomName = `room_${Date.now()}_${socket.id}`;
+                                    socket.data.room = roomName;
+                                    partnerSocket.data.room = roomName;
+                                    socket.join(roomName);
+                                    partnerSocket.join(roomName);
 
-                            return io.to(roomName).emit("matched", { room: roomName, topic });
+                                    await redis.set(`session:${roomName}`, JSON.stringify({
+                                        userId: partnerSocket.data.userId,
+                                        listenerId: socket.data.userId,
+                                        listenerRate: socket.data.hourlyRate || 199,
+                                        startTime: Date.now()
+                                    }));
+
+                                    io.to(roomName).emit("matched", { room: roomName, topic });
+                                    matched = true;
+                                    break;
+                                } else {
+                                    await redis.lpush('waiting_users_' + topic, partnerSocketId);
+                                }
+                            }
                         }
                     }
+                    if (matched) return;
                 }
 
                 // 2. Fallback: No users found. Push listener into ALL their topic queues
@@ -79,21 +134,40 @@ export const handleSockets = (io: Server) => {
                 // THIS IS A NORMAL USER
 
                 // 1. Check if there is a LISTENER waiting in this topic
-                const partnerSocketId = await redis.rpop('waiting_listeners_' + userTopic);
+                let matched = false;
+                const queueLen = await redis.llen('waiting_listeners_' + userTopic);
+                for (let i = 0; i < queueLen; i++) {
+                    const partnerSocketId = await redis.rpop('waiting_listeners_' + userTopic);
+                    if (!partnerSocketId) break;
 
-                if (partnerSocketId && partnerSocketId !== socket.id) {
-                    const partnerSocket = io.sockets.sockets.get(partnerSocketId);
+                    if (partnerSocketId !== socket.id) {
+                        const partnerSocket = io.sockets.sockets.get(partnerSocketId);
 
-                    if (partnerSocket && !partnerSocket.data.room) {
-                        const roomName = `room_${Date.now()}_${socket.id}`;
-                        socket.data.room = roomName;
-                        partnerSocket.data.room = roomName;
-                        socket.join(roomName);
-                        partnerSocket.join(roomName);
+                        if (partnerSocket && !partnerSocket.data.room) {
+                            if ((socket.data.walletBalance || 0) >= (partnerSocket.data.hourlyRate || 199)) {
+                                const roomName = `room_${Date.now()}_${socket.id}`;
+                                socket.data.room = roomName;
+                                partnerSocket.data.room = roomName;
+                                socket.join(roomName);
+                                partnerSocket.join(roomName);
 
-                        return io.to(roomName).emit("matched", { room: roomName, topic: userTopic });
+                                await redis.set(`session:${roomName}`, JSON.stringify({
+                                    userId: socket.data.userId,
+                                    listenerId: partnerSocket.data.userId,
+                                    listenerRate: partnerSocket.data.hourlyRate || 199,
+                                    startTime: Date.now()
+                                }));
+
+                                io.to(roomName).emit("matched", { room: roomName, topic: userTopic });
+                                matched = true;
+                                break;
+                            } else {
+                                await redis.lpush('waiting_listeners_' + userTopic, partnerSocketId);
+                            }
+                        }
                     }
                 }
+                if (matched) return;
 
                 // 2. Fallback: No listeners found. Push user into waiting_users queue
                 await redis.lpush('waiting_users_' + userTopic, socket.id);
@@ -128,9 +202,12 @@ export const handleSockets = (io: Server) => {
         })
 
         // when user wants to leave chat
-        socket.on("leave_room", (data) => {
+        socket.on("leave_room", async (data) => {
             // tell the other person they left
             socket.to(data.room).emit("stranger_disconnected")
+            
+            await endSession(data.room);
+
             // remove the socket from the room
             socket.leave(data.room)
             socket.data.room = null;
@@ -148,6 +225,7 @@ export const handleSockets = (io: Server) => {
         socket.on('disconnect', async () => {
             if (socket.data.room) {
                 socket.to(socket.data.room).emit('stranger_disconnected', { id: socket.id })
+                await endSession(socket.data.room);
             }
             // If they were in any queue, we don't know the topic easily without tracking it, 
             // but lrem is fast enough if we check common ones, or we just let it be a ghost.
