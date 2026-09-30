@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Calendar, Clock, Info, CheckCircle2, RefreshCcw } from "lucide-react";
 import Navbar from "@/components/ui/Navbar";
+import WalletManager from "@/components/WalletManager";
 import axios from "axios";
 
 import { useRouter } from "next/navigation";
@@ -60,6 +61,7 @@ export default function DashboardPage() {
     { id: "upcoming", label: "Upcoming Conversations" },
     { id: "past", label: `Past Conversations (${pastSessions.length})` },
     { id: "saved", label: "Saved Someones" },
+    { id: "wallet", label: "Wallet & Credits" },
     { id: "privacy", label: "Privacy & Identity" },
   ];
 
@@ -170,6 +172,12 @@ export default function DashboardPage() {
             {activeTab === "saved" && (
               <motion.div key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="py-10 text-center">
                 <p className="text-gray-500 font-medium">You have 1 saved someone.</p>
+              </motion.div>
+            )}
+
+            {activeTab === "wallet" && (
+              <motion.div key="wallet" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="py-10">
+                <WalletManager />
               </motion.div>
             )}
 
