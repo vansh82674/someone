@@ -44,6 +44,11 @@ router.post("/apply-listener", async (req, res) => {
         return res.status(400).json({ error: "Email is required" });
     }
 
+    const rate = req.body.hourlyRate || 199;
+    if (rate < 119 || rate > 499) {
+        return res.status(400).json({ error: "Hourly rate must be between ₹119 and ₹499" });
+    }
+
     try {
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
@@ -58,7 +63,7 @@ router.post("/apply-listener", async (req, res) => {
                 tagline: tagline || "Listener",
                 quote: quote || "I'm here to listen.",
                 topics: topics || [],
-                hourlyRate: req.body.hourlyRate || 199,
+                hourlyRate: rate,
                 bgColor: bgColor || "bg-[#7C3AED]"
             }
         });

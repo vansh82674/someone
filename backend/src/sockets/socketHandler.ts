@@ -9,13 +9,26 @@ const isClean = (text: string) => {
     return !BANNED_WORDS.some(word => lowerText.includes(word));
 };
 
+const sessionTimeouts = new Map<string, NodeJS.Timeout>();
+
 const endSession = async (roomName: string) => {
+    if (sessionTimeouts.has(roomName)) {
+        clearTimeout(sessionTimeouts.get(roomName)!);
+        sessionTimeouts.delete(roomName);
+    }
+
     const sessionStr = await redis.get(`session:${roomName}`);
     if (sessionStr) {
         await redis.del(`session:${roomName}`);
         const session = JSON.parse(sessionStr);
         const durationMins = (Date.now() - session.startTime) / 60000;
-        const deduction = Math.ceil((session.listenerRate / 60) * durationMins);
+        
+        // 30 seconds free grace period
+        if (durationMins < 0.5) return;
+
+        // Minimum 5 minutes charge
+        const chargeableMins = Math.max(5, durationMins);
+        const deduction = Math.ceil((session.listenerRate / 60) * chargeableMins);
         
         if (deduction > 0) {
             try {
@@ -105,12 +118,26 @@ export const handleSockets = (io: Server) => {
                                     socket.join(roomName);
                                     partnerSocket.join(roomName);
 
+                                    const listenerRate = socket.data.hourlyRate || 199;
+                                    const maxDurationMins = (partnerSocket.data.walletBalance || 0) / (listenerRate / 60);
+                                    
                                     await redis.set(`session:${roomName}`, JSON.stringify({
                                         userId: partnerSocket.data.userId,
                                         listenerId: socket.data.userId,
-                                        listenerRate: socket.data.hourlyRate || 199,
+                                        listenerRate: listenerRate,
                                         startTime: Date.now()
                                     }));
+
+                                    const timeoutId = setTimeout(async () => {
+                                        io.to(roomName).emit("stranger_disconnected");
+                                        io.to(roomName).emit("message_blocked", { error: "Session ended: User ran out of funds." });
+                                        socket.leave(roomName);
+                                        partnerSocket.leave(roomName);
+                                        socket.data.room = null;
+                                        partnerSocket.data.room = null;
+                                        await endSession(roomName);
+                                    }, Math.max(maxDurationMins * 60000, 1000));
+                                    sessionTimeouts.set(roomName, timeoutId);
 
                                     io.to(roomName).emit("matched", { room: roomName, topic });
                                     matched = true;
@@ -151,12 +178,26 @@ export const handleSockets = (io: Server) => {
                                 socket.join(roomName);
                                 partnerSocket.join(roomName);
 
+                                const listenerRate = partnerSocket.data.hourlyRate || 199;
+                                const maxDurationMins = (socket.data.walletBalance || 0) / (listenerRate / 60);
+
                                 await redis.set(`session:${roomName}`, JSON.stringify({
                                     userId: socket.data.userId,
                                     listenerId: partnerSocket.data.userId,
-                                    listenerRate: partnerSocket.data.hourlyRate || 199,
+                                    listenerRate: listenerRate,
                                     startTime: Date.now()
                                 }));
+
+                                const timeoutId = setTimeout(async () => {
+                                    io.to(roomName).emit("stranger_disconnected");
+                                    io.to(roomName).emit("message_blocked", { error: "Session ended: User ran out of funds." });
+                                    socket.leave(roomName);
+                                    partnerSocket.leave(roomName);
+                                    socket.data.room = null;
+                                    partnerSocket.data.room = null;
+                                    await endSession(roomName);
+                                }, Math.max(maxDurationMins * 60000, 1000));
+                                sessionTimeouts.set(roomName, timeoutId);
 
                                 io.to(roomName).emit("matched", { room: roomName, topic: userTopic });
                                 matched = true;
