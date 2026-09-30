@@ -31,7 +31,7 @@ export default function BecomeSomeonePage() {
     tagline: "",
     quote: "",
     topics: [] as string[],
-    price: "₹199 / 60m",
+    hourlyRate: 199,
   });
 
   if (status === "loading") {
@@ -62,7 +62,7 @@ export default function BecomeSomeonePage() {
         tagline: formData.tagline,
         quote: formData.quote,
         topics: formData.topics,
-        price: formData.price,
+        hourlyRate: formData.hourlyRate,
         bgColor: "bg-brand-violet",
       });
 
@@ -201,13 +201,17 @@ export default function BecomeSomeonePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-brand-dark ml-1">Hourly Rate</label>
+                  <label className="text-sm font-bold text-brand-dark ml-1">Hourly Rate (₹)</label>
                   <input
-                    disabled
-                    value={formData.price}
-                    className="flex w-full bg-gray-100 border-none h-14 rounded-2xl px-5 text-gray-500 font-medium"
+                    type="number"
+                    min="119"
+                    max="499"
+                    required
+                    value={formData.hourlyRate}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, hourlyRate: parseInt(e.target.value) || 119 })}
+                    className="flex w-full bg-gray-50 border-none h-14 rounded-2xl px-5 text-brand-dark font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet"
                   />
-                  <p className="text-xs text-gray-400 ml-1 mt-1 font-medium">Standard rate for all new listeners.</p>
+                  <p className="text-xs text-gray-400 ml-1 mt-1 font-medium">Set your rate between ₹119 and ₹499 per hour.</p>
                 </div>
 
                 <Button

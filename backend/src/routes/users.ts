@@ -21,7 +21,7 @@ router.get("/listeners", async (req, res) => {
                 reviewsCount: true,
                 quote: true,
                 topics: true,
-                price: true,
+                hourlyRate: true,
                 bgColor: true,
             },
             orderBy: {
@@ -58,7 +58,7 @@ router.post("/apply-listener", async (req, res) => {
                 tagline: tagline || "Listener",
                 quote: quote || "I'm here to listen.",
                 topics: topics || [],
-                price: price || "₹0 / 60m",
+                hourlyRate: req.body.hourlyRate || 199,
                 bgColor: bgColor || "bg-[#7C3AED]"
             }
         });
