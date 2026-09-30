@@ -9,6 +9,7 @@ import sessionsRouter from './routes/sessions.js';
 import reportRouter from './routes/report.js';
 import usersRouter from './routes/users.js';
 import adminRouter from './routes/admin.js'
+import walletRouter from './routes/wallet.js';
 
 const app = express();
 app.use(cors({
@@ -22,6 +23,7 @@ app.use('/api/sessions', sessionsRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/admin', adminRouter)
+app.use('/api/wallet', walletRouter);
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
