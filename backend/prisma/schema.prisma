@@ -29,10 +29,12 @@ model User {
     reviewsCount  Int          @default(0)
     quote         String?
     topics        String[]     @default([])
-    price         String?
+    hourlyRate    Int          @default(199)
     bgColor       String?
+    walletBalance Int          @default(0)
 
     sessionLogs   SessionLog[]
+    transactions  Transaction[]
 }
 
 model SessionLog {
@@ -52,4 +54,15 @@ model ModerationEvent {
     reporterId  Int
     reason      String
     timestamp   DateTime @default(now())
+}
+
+model Transaction {
+    id          String   @id @default(uuid())
+    userId      Int
+    user        User     @relation(fields: [userId], references: [id])
+    amount      Int
+    type        String   // 'CREDIT_ADD', 'CHAT_DEDUCTION', 'CHAT_EARNING', 'PAYOUT'
+    status      String   @default("PENDING") // 'PENDING', 'SUCCESS', 'FAILED'
+    referenceId String?  // Razorpay payment ID or Session ID
+    createdAt   DateTime @default(now())
 }
