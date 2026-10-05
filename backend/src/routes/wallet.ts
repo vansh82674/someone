@@ -13,8 +13,12 @@ const razorpay = new Razorpay({
 router.post("/create-order", async (req, res) => {
     const { amount, userId } = req.body;
     
-    if (!amount || !userId) {
+    if (amount === undefined || !userId) {
         return res.status(400).json({ error: "Amount and UserId are required" });
+    }
+
+    if (typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
     }
 
     try {
@@ -32,36 +36,49 @@ router.post("/create-order", async (req, res) => {
 });
 
 router.post("/verify-payment", async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, amount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
 
     const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || 'mock_secret');
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
     const generated_signature = hmac.digest("hex");
 
-    if (generated_signature === razorpay_signature) {
-        try {
-            await prisma.$transaction([
-                prisma.user.update({
-                    where: { id: parseInt(userId) },
-                    data: { walletBalance: { increment: amount } }
-                }),
-                prisma.transaction.create({
-                    data: {
-                        userId: parseInt(userId),
-                        amount: amount,
-                        type: 'CREDIT_ADD',
-                        status: 'SUCCESS',
-                        referenceId: razorpay_payment_id
-                    }
-                })
-            ]);
-            res.status(200).json({ success: true });
-        } catch (error) {
-            console.error("Verification DB update failed:", error);
-            res.status(500).json({ error: "Internal server error" });
+    if (generated_signature !== razorpay_signature) {
+        return res.status(400).json({ success: false, error: "Invalid signature" });
+    }
+
+    try {
+        // SECURITY FIX: Never trust client-provided amount. Fetch from Razorpay!
+        const order = await razorpay.orders.fetch(razorpay_order_id);
+        
+        if (!order || !order.amount) {
+            return res.status(400).json({ success: false, error: "Invalid order" });
         }
-    } else {
-        res.status(400).json({ success: false, error: "Invalid signature" });
+
+        const actualAmount = order.amount / 100; // convert paise back to INR
+
+        await prisma.$transaction([
+            prisma.user.update({
+                where: { id: parseInt(userId) },
+                data: { walletBalance: { increment: actualAmount } }
+            }),
+            prisma.transaction.create({
+                data: {
+                    userId: parseInt(userId),
+                    amount: actualAmount,
+                    type: 'CREDIT_ADD',
+                    status: 'SUCCESS',
+                    referenceId: razorpay_payment_id
+                }
+            })
+        ]);
+        res.status(200).json({ success: true, amount: actualAmount });
+    } catch (error) {
+        console.error("Verification DB update failed:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 

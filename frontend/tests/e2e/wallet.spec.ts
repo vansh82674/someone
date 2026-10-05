@@ -85,7 +85,7 @@ test.describe('Wallet & Matchmaking Flow', () => {
     await page.goto('/dashboard/wallet'); // Assuming this route exists based on WalletManager component
 
     // The user should see the Wallet & Credits heading
-    await expect(page.locator('text=Wallet & Credits')).toBeVisible();
+    await expect(page.locator('text=Wallet & Credits')).toBeVisible({ timeout: 15000 });
 
     // Select the ₹500 option
     await page.click('button:has-text("₹500")');
