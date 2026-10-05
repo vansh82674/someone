@@ -20,7 +20,7 @@ export default function WalletManager() {
     // Let's create a quick API call to get user profile if needed, or just use session.
     // Since we didn't expose GET /api/users/me, let's just mock it or rely on session update.
     if ((session?.user as any)?.walletBalance !== undefined) {
-      setBalance((session.user as any).walletBalance);
+      setBalance((session?.user as any).walletBalance);
     }
   }, [session]);
 
