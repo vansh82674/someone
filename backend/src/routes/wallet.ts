@@ -12,7 +12,7 @@ const razorpay = new Razorpay({
 
 router.post("/create-order", async (req, res) => {
     const { amount, userId } = req.body;
-    
+
     if (amount === undefined || !userId) {
         return res.status(400).json({ error: "Amount and UserId are required" });
     }
@@ -53,12 +53,12 @@ router.post("/verify-payment", async (req, res) => {
     try {
         // SECURITY FIX: Never trust client-provided amount. Fetch from Razorpay!
         const order = await razorpay.orders.fetch(razorpay_order_id);
-        
+
         if (!order || !order.amount) {
             return res.status(400).json({ success: false, error: "Invalid order" });
         }
 
-        const actualAmount = order.amount / 100; // convert paise back to INR
+        const actualAmount = Number(order.amount) / 100; // convert paise back to INR
 
         await prisma.$transaction([
             prisma.user.update({
