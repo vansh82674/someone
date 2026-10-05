@@ -109,7 +109,7 @@ export const handleSockets = (io: Server) => {
                         if (partnerSocketId !== socket.id) {
                             const partnerSocket = io.sockets.sockets.get(partnerSocketId);
 
-                            if (partnerSocket && !partnerSocket.data.room) {
+                            if (partnerSocket && !partnerSocket.data.room && partnerSocket.data.userId !== socket.data.userId) {
                                 // Check if user has enough balance for this listener
                                 if ((partnerSocket.data.walletBalance || 0) >= (socket.data.hourlyRate || 199)) {
                                     const roomName = `room_${Date.now()}_${socket.id}`;
@@ -170,7 +170,7 @@ export const handleSockets = (io: Server) => {
                     if (partnerSocketId !== socket.id) {
                         const partnerSocket = io.sockets.sockets.get(partnerSocketId);
 
-                        if (partnerSocket && !partnerSocket.data.room) {
+                        if (partnerSocket && !partnerSocket.data.room && partnerSocket.data.userId !== socket.data.userId) {
                             if ((socket.data.walletBalance || 0) >= (partnerSocket.data.hourlyRate || 199)) {
                                 const roomName = `room_${Date.now()}_${socket.id}`;
                                 socket.data.room = roomName;
