@@ -18,7 +18,7 @@ vi.mock('../../config/prisma.js', () => ({
   }
 }));
 
-const prismaMock = prisma;
+const prismaMock = prisma as any;
 
 describe('Users Routes (Integration & Unit)', () => {
     beforeEach(() => {
@@ -37,7 +37,8 @@ describe('Users Routes (Integration & Unit)', () => {
                     reviewsCount: 128,
                     quote: "Calm listener",
                     topics: ["Relationships"],
-                    price: "₹199 / 60m",
+                    hourlyRate: 199,
+                    walletBalance: 0,
                     bgColor: "bg-[#7C3AED]"
                 }
             ];
@@ -98,7 +99,7 @@ describe('Users Routes (Integration & Unit)', () => {
                 tagline: "Listener",
                 quote: "Here to listen",
                 topics: ["Life"],
-                price: "₹199 / 60m",
+                hourlyRate: 199,
                 bgColor: "bg-black"
             };
 
