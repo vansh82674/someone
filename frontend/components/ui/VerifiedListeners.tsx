@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "./button";
 import { Card } from "./card";
 import { BadgeCheck, Star, ArrowRight, Loader2 } from "lucide-react";
 import axios from "axios";
+import ListenerProfileModal, { ListenerProfile } from "./ListenerProfileModal";
 
 interface Listener {
   id: number;
@@ -21,11 +23,13 @@ interface Listener {
 export default function VerifiedListeners() {
     const [listeners, setListeners] = useState<Listener[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedListener, setSelectedListener] = useState<ListenerProfile | null>(null);
 
     useEffect(() => {
       const fetchListeners = async () => {
         try {
-          const res = await axios.get("http://localhost:8081/api/users/listeners");
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8081";
+          const res = await axios.get(`${backendUrl}/api/users/listeners`);
           setListeners(res.data);
         } catch (error) {
           console.error("Failed to fetch listeners:", error);
@@ -58,9 +62,11 @@ export default function VerifiedListeners() {
                     <p className="text-[13px] md:text-[14px] text-brand-dark/60 font-medium max-w-xl">Real humans ready to offer thoughtful, non-judgmental perspectives.</p>
                 </div>
                 <div className="mt-4 md:mt-0">
-                    <Button variant="outline" className="text-brand-dark rounded-lg h-9 p-5 border-gray-200 hover:bg-gray-50 text-sm font-bold group transition-all">
-                        Explore All Someones <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    <Link href="/explore">
+                        <Button variant="outline" className="text-brand-dark rounded-lg h-9 p-5 border-gray-200 hover:bg-gray-50 text-sm font-bold group transition-all cursor-pointer">
+                            Explore All Someones <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                    </Link>
                 </div>
             </div>
 
@@ -112,13 +118,22 @@ export default function VerifiedListeners() {
                         {/* Footer */}
                         <div className="flex items-center justify-between">
                             <div className="font-bold text-brand-dark text-sm tracking-tight">{listener.price}</div>
-                            <Button className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-[10px] px-4 py-5 h-7 text-sm font-bold shadow-none">
+                            <Button 
+                                onClick={() => setSelectedListener(listener)}
+                                className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-[10px] px-4 py-5 h-7 text-sm font-bold shadow-none cursor-pointer transition-transform hover:scale-105"
+                            >
                                 View Profile
                             </Button>
                         </div>
                     </Card>
                 ))}
             </div>
+
+            {/* Listener Quick-View Modal */}
+            <ListenerProfileModal
+                listener={selectedListener}
+                onClose={() => setSelectedListener(null)}
+            />
         </section>
     )
 }
