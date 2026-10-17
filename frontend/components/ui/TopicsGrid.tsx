@@ -1,6 +1,9 @@
+'use client';
+
 import { MessageCircle, Compass, Luggage, Lightbulb, GraduationCap, Users, Sparkles, CircleHelp, LucideIcon, MoveRight, CheckCircle2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "./button"
 
 type MessageType = {
@@ -53,11 +56,29 @@ export default function TopicsGrid() {
         }
     ]
 
-    const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const router = useRouter();
+
+    const topicMap: Record<string, string> = {
+        "Just Talk": "Casual Chat",
+        "A Decision": "Casual Chat",
+        "Moving On": "Just Venting",
+        "Career": "Career Advice",
+        "Academics": "School & Studies",
+        "Relationships": "Relationships",
+        "Self Growth": "Just Venting",
+        "Something Else": "Casual Chat"
+    };
 
     const handleSelectedTopic = (i: number) => {
-        setSelectedTopic(topics[i].title)
-    }
+        setSelectedTopic(topics[i].title);
+    };
+
+    const handleContinueMatch = () => {
+        if (!selectedTopic) return;
+        const mappedQueueTopic = topicMap[selectedTopic] || "Casual Chat";
+        router.push(`/queue?topic=${encodeURIComponent(mappedQueueTopic)}`);
+    };
 
     return (
         <section className="bg-brand-cream py-24 px-6 max-w-5xl mx-auto">
@@ -117,7 +138,10 @@ export default function TopicsGrid() {
                         <p className="text-brand-dark/70 text-sm md:text-base">
                             Selected focus: <strong className="text-brand-dark">{selectedTopic}</strong>
                         </p>
-                        <Button className="w-full md:w-auto bg-brand-violet/90 hover:bg-brand-violet text-white rounded-xl px-6 py-6 text-base font-semibold">
+                        <Button 
+                            onClick={handleContinueMatch}
+                            className="w-full md:w-auto bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl px-8 py-6 text-base font-semibold cursor-pointer shadow-lg shadow-brand-violet/20 transition-all hover:scale-105"
+                        >
                             Continue to Match <MoveRight className="ml-2 w-5 h-5" />
                         </Button>
                     </div>

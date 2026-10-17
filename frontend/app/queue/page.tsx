@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSocket } from "@/components/ui/SocketProvider";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/ui/Navbar";
 import { Loader2, Heart, Briefcase, GraduationCap, Users, Coffee, Sparkles, Ear } from "lucide-react";
 import Footer from "@/components/ui/Footer";
@@ -17,15 +17,27 @@ const TOPICS = [
     { id: "Relationships", label: "Relationships", icon: <Users className="w-5 h-5" /> }
 ];
 
-export default function Queue() {
+function QueueContent() {
     const { socket } = useSocket();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session, status: sessionStatus } = useSession();
     
     const [status, setStatus] = useState<"selecting" | "queueing">("selecting");
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
     const isListener = (session?.user as any)?.role === "LISTENER" && (session?.user as any)?.isVerified === true;
+
+    // Auto-select topic if passed in URL query param (e.g. from TopicsGrid or Listener modal)
+    useEffect(() => {
+        const topicParam = searchParams?.get("topic");
+        if (topicParam) {
+            const matched = TOPICS.find(t => t.id.toLowerCase() === topicParam.toLowerCase());
+            if (matched) {
+                setSelectedTopic(matched.id);
+            }
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (!socket) return;
@@ -185,5 +197,17 @@ export default function Queue() {
 
             <Footer />
         </div>
+    );
+}
+
+export default function Queue() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-brand-cream">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-violet" />
+            </div>
+        }>
+            <QueueContent />
+        </Suspense>
     );
 }
