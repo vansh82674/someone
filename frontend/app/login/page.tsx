@@ -13,6 +13,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const isRegistered = searchParams?.get("registered") === "true";
 
@@ -76,7 +77,11 @@ function LoginForm() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">
               <label className="text-sm font-bold text-brand-dark/80">Password</label>
-              <button type="button" onClick={() => alert("Password reset flow coming soon!")} className="text-xs font-bold text-brand-violet hover:text-brand-violet/80 transition-colors">
+              <button 
+                type="button" 
+                onClick={() => setInfoMessage("Password reset is managed securely by admin. Please contact support@someone.care to reset your credentials.")} 
+                className="text-xs font-bold text-brand-violet hover:text-brand-violet/80 transition-colors cursor-pointer"
+              >
                 Forgot password?
               </button>
             </div>
@@ -89,6 +94,12 @@ function LoginForm() {
               className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-violet/20 transition-all text-brand-dark font-medium"
             />
           </div>
+
+          {infoMessage && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="text-brand-violet text-xs font-semibold text-center bg-brand-violet/10 p-3 rounded-xl border border-brand-violet/20 leading-relaxed">
+              {infoMessage}
+            </motion.div>
+          )}
 
           {error && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="text-red-500 text-sm font-semibold text-center bg-red-50 py-2 rounded-lg">

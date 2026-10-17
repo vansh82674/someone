@@ -3,9 +3,10 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Calendar, Clock, Info, CheckCircle2, RefreshCcw } from "lucide-react";
+import { ShieldCheck, Calendar, Clock, Info, CheckCircle2, RefreshCcw, Sparkles, BadgeCheck, ArrowRight } from "lucide-react";
 import Navbar from "@/components/ui/Navbar";
 import WalletManager from "@/components/WalletManager";
 import axios from "axios";
@@ -44,11 +45,13 @@ export default function DashboardPage() {
     return null; // Will redirect via useEffect
   }
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8081";
+
   const fetchPastSessions = async () => {
     if (!session?.user) return;
     setIsLoadingPast(true);
     try {
-      const res = await axios.get(`http://localhost:8081/api/sessions/past/${(session.user as any).id}`);
+      const res = await axios.get(`${backendUrl}/api/sessions/past/${(session.user as any).id}`);
       setPastSessions(res.data);
     } catch (error) {
       console.error("Failed to fetch past sessions:", error);
@@ -120,12 +123,19 @@ export default function DashboardPage() {
                 transition={{ duration: 0.3 }}
                 className="grid gap-6"
               >
-                <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
                   <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                    <Calendar className="w-10 h-10 text-gray-300" />
+                    <Calendar className="w-10 h-10 text-brand-violet/40" />
                   </div>
                   <h3 className="text-xl font-bold text-brand-dark mb-2">No Upcoming Conversations</h3>
-                  <p className="text-gray-500 font-medium max-w-xs">You don't have any scheduled sessions yet.</p>
+                  <p className="text-gray-500 font-medium max-w-sm mb-6 text-sm">
+                    Ready to talk, vent, or think out loud? Enter the queue to find someone in seconds.
+                  </p>
+                  <Link href="/queue">
+                    <Button className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl px-6 py-6 font-bold shadow-lg shadow-brand-violet/20 cursor-pointer">
+                      <Sparkles className="w-4 h-4 mr-2" /> Find Someone Now
+                    </Button>
+                  </Link>
                 </div>
               </motion.div>
             )}
@@ -144,22 +154,22 @@ export default function DashboardPage() {
                     <p className="text-gray-500 font-medium">Loading your past sessions...</p>
                   </div>
                 ) : pastSessions.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
                     <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                       <Clock className="w-10 h-10 text-gray-300" />
                     </div>
                     <h3 className="text-xl font-bold text-brand-dark mb-2">No Past Conversations</h3>
-                    <p className="text-gray-500 font-medium max-w-xs">Your past conversation history will appear here once you complete a session.</p>
+                    <p className="text-gray-500 font-medium max-w-xs text-sm">Your past conversation history will appear here once you complete a session.</p>
                   </div>
                 ) : (
                   <div className="grid gap-4">
                     {pastSessions.map((session: any) => (
-                      <div key={session.id} className="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center">
+                      <div key={session.id} className="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
                         <div>
                           <p className="font-bold text-brand-dark">Chat with {session.partnerAnonId}</p>
                           <p className="text-sm text-gray-500">{new Date(session.createdAt).toLocaleDateString()} • {Math.round(session.durationSeconds / 60)} minutes</p>
                         </div>
-                        <div className="text-sm font-medium px-3 py-1 bg-gray-50 rounded-lg text-gray-600">
+                        <div className="text-sm font-semibold px-3 py-1 bg-brand-violet/10 rounded-lg text-brand-violet">
                           {session.topic || 'Casual'}
                         </div>
                       </div>
@@ -170,8 +180,39 @@ export default function DashboardPage() {
             )}
             
             {activeTab === "saved" && (
-              <motion.div key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="py-10 text-center">
-                <p className="text-gray-500 font-medium">You have 1 saved someone.</p>
+              <motion.div key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="py-6">
+                <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm max-w-2xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-brand-violet text-white font-bold rounded-2xl flex items-center justify-center text-lg shadow-sm">
+                        ML
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-lg text-brand-dark">Maya Lin</h4>
+                          <span className="flex items-center gap-0.5 text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full uppercase">
+                            <BadgeCheck className="w-3.5 h-3.5 text-green-600" /> Verified
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 font-medium mt-0.5">Mindful Guide & Life Transitions</p>
+                      </div>
+                    </div>
+                    <Link href="/queue?topic=Casual%20Chat">
+                      <Button className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl text-xs font-bold px-4 py-2.5 shadow-md shadow-brand-violet/20 cursor-pointer">
+                        Connect Now <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                  <p className="text-xs text-gray-600 italic bg-brand-cream/60 p-4 rounded-xl mb-6">
+                    "Offering patient, calming perspective for navigating life pivots, relationship crossroads, or everyday mental clutter."
+                  </p>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <span className="text-xs text-gray-400 font-medium">Want to save more Someones?</span>
+                    <Link href="/explore" className="text-brand-violet hover:underline text-xs font-bold flex items-center gap-1">
+                      Browse Community Directory <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
               </motion.div>
             )}
 

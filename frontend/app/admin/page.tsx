@@ -24,12 +24,14 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8081";
+
   useEffect(() => {
     if (!session?.user?.id) return;
 
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:8081/api/admin/pending-listeners", {
+        const res = await axios.get(`${backendUrl}/api/admin/pending-listeners`, {
           headers: {
             'x-user-id': session.user.id
           },
@@ -44,7 +46,7 @@ export default function AdminDashboardPage() {
     };
 
     fetchData();
-  }, [session?.user?.id])
+  }, [session?.user?.id, backendUrl]);
 
   if (loading) {
     return (
@@ -58,7 +60,7 @@ export default function AdminDashboardPage() {
     if (!session?.user?.id) return;
     
     try {
-      await axios.post("http://localhost:8081/api/admin/verify-listener", 
+      await axios.post(`${backendUrl}/api/admin/verify-listener`, 
         { email },
         {
           headers: {
@@ -79,7 +81,32 @@ export default function AdminDashboardPage() {
     } catch (error) {
       console.error("Failed to verify listener:", error);
     }
-  }
+  };
+
+  const handleRejectListener = async (email: string) => {
+    if (!session?.user?.id) return;
+
+    try {
+      await axios.post(`${backendUrl}/api/admin/reject-listener`,
+        { email },
+        {
+          headers: {
+            'x-user-id': session.user.id
+          },
+          withCredentials: true
+        }
+      );
+
+      if (data) {
+        setData({
+          ...data,
+          pendingUsers: data.pendingUsers.filter((u) => u.email !== email),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to reject listener:", error);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -126,7 +153,10 @@ export default function AdminDashboardPage() {
                         <Check className="w-4 h-4" />
                         Approve
                       </button>
-                      <button className="inline-flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
+                      <button 
+                        onClick={() => handleRejectListener(user.email)}
+                        className="inline-flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                      >
                         <X className="w-4 h-4" />
                         Reject
                       </button>

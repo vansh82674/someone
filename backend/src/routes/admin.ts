@@ -57,4 +57,70 @@ router.post('/verify-listener', async (req, res) => {
     }
 })
 
+router.post('/reject-listener', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Reset role to USER and remove listener flags
+        const rejectedUser = await prisma.user.update({
+            where: { email },
+            data: {
+                role: "USER",
+                isVerified: false,
+                tagline: null,
+                quote: null,
+                topics: []
+            }
+        });
+
+        res.status(200).json({ message: "Listener application rejected", user: rejectedUser });
+    }
+    catch (error) {
+        console.error('reject-listener error', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+router.get('/users', async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                anonId: true,
+                role: true,
+                isVerified: true,
+                isAdmin: true,
+                walletBalance: true,
+                hourlyRate: true
+            },
+            orderBy: { id: 'desc' }
+        });
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('admin users error', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+router.get('/reports', async (req, res) => {
+    try {
+        const reports = await prisma.moderationEvent.findMany({
+            orderBy: { timestamp: 'desc' }
+        });
+
+        res.status(200).json(reports);
+    } catch (error) {
+        console.error('admin reports error', error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 export default router;
