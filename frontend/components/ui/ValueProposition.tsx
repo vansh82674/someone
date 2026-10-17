@@ -1,6 +1,6 @@
 
 export default function ValueProposition() {
-    return <section className="w-full bg-brand-dark py-20 px-6">
+    return <section id="about" className="w-full bg-brand-dark py-20 px-6 scroll-mt-24">
         <div className="flex flex-col items-center justify-center p-10">
             <h2 className="md:text-5xl text-3xl text-white font-bold">Everyone is connected.</h2>
             <h2 className="md:text-5xl text-3xl text-[#A684FF] font-bold">Not everyone feels heard.</h2>

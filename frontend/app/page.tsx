@@ -1,14 +1,17 @@
 'use client'
+import { useState } from "react";
 import Navbar from "@/components/ui/Navbar";
 import Hero from "@/components/ui/Hero";
 import TopicsGrid from "@/components/ui/TopicsGrid";
 import ValueProposition from "@/components/ui/ValueProposition";
+import SafetySection from "@/components/ui/SafetySection";
 import ProcessSteps from "@/components/ui/ProcessSteps";
 import VerifiedListeners from "@/components/ui/VerifiedListeners";
 import Pricing from "@/components/ui/Pricing";
 import FaqSection from "@/components/ui/FaqSection";
 import CtaSection from "@/components/ui/CtaSection";
 import Footer from "@/components/ui/Footer";
+import InfoModal, { ModalType } from "@/components/ui/InfoModal";
 import { motion } from "framer-motion";
 
 const FadeUp = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => (
@@ -23,6 +26,8 @@ const FadeUp = ({ children, delay = 0 }: { children: React.ReactNode, delay?: nu
 );
 
 export default function Home() {
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+
   return (
     <div className="min-h-screen bg-brand-cream overflow-x-hidden flex flex-col">
       <Navbar />
@@ -30,6 +35,7 @@ export default function Home() {
         <Hero />
         <FadeUp><TopicsGrid /></FadeUp>
         <FadeUp><ValueProposition /></FadeUp>
+        <FadeUp><SafetySection onOpenEmergency={() => setActiveModal('emergency')} /></FadeUp>
         <FadeUp><ProcessSteps /></FadeUp>
         <FadeUp><VerifiedListeners /></FadeUp>
         <FadeUp><Pricing /></FadeUp>
@@ -37,6 +43,9 @@ export default function Home() {
       </main>
       <FadeUp><CtaSection /></FadeUp>
       <Footer />
+
+      {/* Info Dialog */}
+      <InfoModal type={activeModal} onClose={() => setActiveModal(null)} />
     </div>
   );
 }

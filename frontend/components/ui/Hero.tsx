@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { Button } from './button';
 import { ShieldCheck, UserCheck, Heart } from 'lucide-react';
 
@@ -46,12 +47,16 @@ export default function Hero() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="flex flex-col sm:flex-row items-center gap-4 mb-20 w-full sm:w-auto"
                 >
-                    <Button size="lg" className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl px-4 py-6 text-lg font-semibold w-full sm:w-auto shadow-lg shadow-brand-violet/20 transition-all hover:scale-105">
-                        Find Your Someone
-                    </Button>
-                    <Button size="lg" variant="outline" className="rounded-xl px-4 py-6 text-lg font-semibold border-gray-300 w-full sm:w-auto hover:bg-gray-100 transition-all">
-                        Become a Someone
-                    </Button>
+                    <Link href="/queue" className="w-full sm:w-auto">
+                        <Button size="lg" className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl px-8 py-6 text-lg font-semibold w-full sm:w-auto shadow-lg shadow-brand-violet/20 transition-all hover:scale-105 cursor-pointer">
+                            Find Your Someone
+                        </Button>
+                    </Link>
+                    <Link href="/become-someone" className="w-full sm:w-auto">
+                        <Button size="lg" variant="outline" className="rounded-xl px-8 py-6 text-lg font-semibold border-gray-300 w-full sm:w-auto hover:bg-gray-100 transition-all cursor-pointer">
+                            Become a Someone
+                        </Button>
+                    </Link>
                 </motion.div>
 
                 <motion.div

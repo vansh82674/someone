@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "./button";
 import { ArrowRight } from "lucide-react";
 
@@ -11,16 +12,19 @@ export default function CtaSection() {
                 Experience unburdened human perspective. Find a verified Someone in under 60 seconds.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <Button className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-full px-7 py-6 font-bold text-[15px] shadow-lg shadow-brand-violet/20 group">
-                    Find Your Someone <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <Button 
-                    variant="outline" 
-                    className="bg-transparent border-white/20 text-white hover:bg-white/10 px-8 h-14 rounded-2xl text-[15px] font-bold"
-                    onClick={() => window.location.href = '/become-someone'}
-                >
-                    Apply to Listen
-                </Button>
+                <Link href="/queue">
+                    <Button className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-full px-8 py-6 font-bold text-[15px] shadow-lg shadow-brand-violet/20 group cursor-pointer">
+                        Find Your Someone <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                </Link>
+                <Link href="/become-someone">
+                    <Button 
+                        variant="outline" 
+                        className="bg-transparent border-white/20 text-white hover:bg-white/10 px-8 h-14 rounded-full text-[15px] font-bold cursor-pointer"
+                    >
+                        Apply to Listen
+                    </Button>
+                </Link>
             </div>
         </section>
     )

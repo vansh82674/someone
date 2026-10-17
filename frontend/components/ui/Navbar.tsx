@@ -112,20 +112,13 @@ export default function Navbar() {
                                     </>
                                 ) : (
                                     <>
-                                        <Link 
-                                            href="/become-someone" 
-                                            className="block text-sm font-bold text-brand-dark/80 hover:text-brand-dark transition-colors py-2"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            Become a Someone
-                                        </Link>
-                                        <Link href="/login" className="w-full">
+                                        <Link href="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
                                             <Button variant="outline" className="w-full rounded-xl py-6 text-brand-dark font-bold border-gray-300 bg-transparent hover:bg-gray-50">
                                                 Log In
                                             </Button>
                                         </Link>
-                                        <Link href="/signup" className="w-full">
-                                            <Button className="w-full bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl py-6 font-bold">
+                                        <Link href="/signup" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                                            <Button className="w-full bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl py-6 font-bold shadow-lg shadow-brand-violet/20">
                                                 Sign Up
                                             </Button>
                                         </Link>
@@ -137,35 +130,36 @@ export default function Navbar() {
                 </AnimatePresence>
 
                 {/* Desktop Right Action */}
-                <div className='hidden md:flex items-center gap-4 relative' ref={dropdownRef}>
+                <div className='hidden md:flex items-center gap-4' ref={dropdownRef}>
                     {status === 'loading' ? (
                         <div className="w-24 h-10 bg-gray-200 animate-pulse rounded-xl"></div>
                     ) : status === 'authenticated' ? (
                         <>
-                            <Button 
-                                variant="outline" 
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="flex items-center gap-2 rounded-xl p-5 border-gray-300 bg-white hover:bg-gray-50 transition-colors"
-                            >
-                                <Avatar className="h-6 w-6 items-center flex justify-center">
-                                    <AvatarFallback className="bg-brand-violet text-white text-[12px] font-bold">
-                                        {session?.user?.name?.[0]?.toUpperCase() || 'U'}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium text-sm">{session?.user?.name}</span>
-                                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                            </Button>
+                            <div className="relative">
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                    className="flex items-center gap-2 rounded-xl p-5 border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                                >
+                                    <Avatar className="h-6 w-6 items-center flex justify-center">
+                                        <AvatarFallback className="bg-brand-violet text-white text-[12px] font-bold">
+                                            {session?.user?.name?.[0]?.toUpperCase() || 'U'}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium text-sm">{session?.user?.name}</span>
+                                    <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                </Button>
 
-                            {/* Dropdown Modal */}
-                            <AnimatePresence>
-                                {isDropdownOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="absolute top-14 right-48 w-64 bg-white rounded-3xl shadow-xl shadow-black/10 border border-gray-100 overflow-hidden flex flex-col z-50"
-                                    >
+                                {/* Dropdown Modal */}
+                                <AnimatePresence>
+                                    {isDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute top-14 right-0 w-64 bg-white rounded-3xl shadow-xl shadow-black/10 border border-gray-100 overflow-hidden flex flex-col z-50"
+                                        >
                                         <div className="p-5 pb-4 border-b border-gray-100">
                                             <p className="text-xs font-semibold text-gray-400 mb-1">Logged in as</p>
                                             <p className="font-bold text-brand-dark text-lg leading-tight">{session?.user?.name}</p>
@@ -195,10 +189,11 @@ export default function Navbar() {
                                         </div>
                                     </motion.div>
                                 )}
-                            </AnimatePresence>
+                                </AnimatePresence>
+                            </div>
 
                             <Link href="/queue">
-                                <Button className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl p-5 font-bold shadow-lg shadow-brand-violet/20 transition-all hover:-translate-y-0.5">
+                                <Button className="bg-brand-violet hover:bg-brand-violet/90 text-white rounded-xl p-5 font-bold shadow-lg shadow-brand-violet/20 transition-all hover:-translate-y-0.5 cursor-pointer">
                                     Find Your Someone
                                 </Button>
                             </Link>
